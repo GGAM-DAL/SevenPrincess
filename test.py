@@ -1,1 +1,0 @@
-print('test connected ggam-dal branch')
