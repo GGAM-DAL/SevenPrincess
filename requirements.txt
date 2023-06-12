@@ -1,0 +1,9 @@
+streamlit
+streamlit_option_menu
+matplotlib
+pandas
+numpy
+platform
+plotly
+flask_sqlalchemy
+mysqlclient
