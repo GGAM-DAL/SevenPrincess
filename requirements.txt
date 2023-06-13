@@ -1,3 +1,4 @@
+pip==23.1.2
 streamlit
 streamlit_option_menu
 matplotlib
@@ -6,4 +7,3 @@ numpy
 plotly
 flask_sqlalchemy==3.0.3
 pymysql
-mysqlclient==2.1.1
