@@ -3,11 +3,9 @@ from streamlit_option_menu import option_menu
 import module.code_list as Codelist
 import module.Poster as Post
 
-## 이제 수정할 것 없음 ##
-
+# Navigation bar
 class nav():
     def streamlit_menu(example):
-        # 2. horizontal menu w/o custom style
         selected = option_menu(
             menu_title=None,  # required
             options=["상영예정작", "상영작", "상영종료작"],  # required
@@ -17,7 +15,8 @@ class nav():
             orientation="horizontal",
             )
         return selected
-    
+
+# Main Page
 def Mainpage(df, selected):
     if selected == "상영예정작":
         screening = 0
@@ -25,6 +24,7 @@ def Mainpage(df, selected):
         screening = 1
     else:
         screening = 2
+    
     if screening == 0:
         df.loc[10] = [11, '분노의 질주: 라이드 오어 다이','#','#','#','#',0,'https://t1.daumcdn.net/movie/6fed61e73b455aba36c3c4b434b6fafe2944e698']
         df.loc[11] = [12, '말없는 소녀','#','#','#','#',0,'https://t1.daumcdn.net/movie/3cdc596cb0d48c05d2210f7ebadab55587c0e179']

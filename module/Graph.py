@@ -19,7 +19,19 @@ elif platform.system() == 'Windows':  # 윈도우
 else:
     print('Unknown system...  sorry~~~')
 
+# calculate cross dot
+def cal_dot(n_days, audi_y, df):
+    x1 = n_days-1
+    y1 = df[df['after_release'] == x1].iloc[0]['acc_audi']
+    x2 = n_days
+    y2 = df[df['after_release'] == x2].iloc[0]['acc_audi']
+    m = (x2 - x1) / (y2 - y1)
+    audi_x = m * (audi_y - y1) + x1
+    return audi_x
+
 def Score(code, avg_score):
+
+    # select table
     score_df = Database.db('movie_review')
     score_df = score_df[score_df.code == code]
 
@@ -140,8 +152,6 @@ def Score(code, avg_score):
     """
     st.markdown(html, unsafe_allow_html=True)
 
-
-
 def Audience(code, screening):
 
     if screening == 0:
@@ -167,73 +177,88 @@ def Audience(code, screening):
         st.markdown(html, unsafe_allow_html=True)
         return
     
+    # a cumalative audience
     audi_df = Database.db('accum_audi')
-    pred_df = Database.db('audi_pred')
     audi = audi_df[audi_df.code == code].reset_index(drop=True)
+
+    # an expected audience
+    pred_df = Database.db('audi_pred')
+    pred_df['pred'] = pred_df['pred'].astype('int')
     pred = pred_df[pred_df.code == code].reset_index(drop=True)
 
-    audi['acc_audi'] = audi['acc_audi'].astype('int')
-    audi['daily_audi'] = audi['daily_audi'].astype('int')
-    pred['pred'] = pred['pred'].astype('int')
-
-    # max1 = audi['daily_audi'].max()
-    # max2 = audi['acc_audi'].max()
-
+    # standard date is 2023-05-30
     if screening == 1:
         audi = audi[audi['date'] < '2023-05-31']
     audi = audi[audi.after_release>=0].reset_index(drop=True)
 
-    audi_x = pred.iloc[0]['pred']
+    # an expected audience for the movie
+    audi_y = pred.iloc[0]['pred']
 
-    if audi.iloc[-1]['acc_audi'] >= audi_x:
-        audi_y = audi[audi['acc_audi'] >= audi_x]
+    if audi.iloc[-1]['acc_audi'] >= audi_y:
+        # audi_y = audi[audi['acc_audi'] >= audi_y]
+        n_days = audi[audi['acc_audi'] >= audi_y].iloc[0]['after_release']
+        accm_audi = audi[audi['acc_audi'] >= audi_y].iloc[0]['acc_audi']
     else:
-        audi_y = audi.iloc[[-1]]
-    st.write(audi_y)
-    # 슬라이드
-    x = st.slider('슬라이드를 움직여 개봉일로부터 선택한 일까지의 관객수를 확인하세요', value=21,
+        n_days = audi.iloc[-1]['after_release']
+        accm_audi = audi.iloc[-1]['acc_audi']
+        
+    # make slide bar
+    max_value = audi.shape[0]-1
+    if max_value < 21:
+        value = max_value
+    else: 
+        value = 21
+    x = st.slider('슬라이드를 움직여 개봉일로부터 선택한 일까지의 관객수를 확인하세요', value=value,
                   min_value=0, max_value=audi.shape[0]-1, step=1)
     df = audi[audi.after_release<=x]
 
-    # 그래프
+    # 2 y-axis 
     fig, ax1 = plt.subplots(figsize=(12,5))
-    # 반대 y축 생성
     ax2 = ax1.twinx()
-    # 일일 관객수 바차트
+    
+    # daily audience bar chart
     barplot = ax1.bar( df.after_release, df.daily_audi, label = '일일 관객수')
 
-    if x >= audi_y.iloc[0]['after_release']:
-        # 개봉 n일차
-        ax2.text(audi_y.iloc[0]['after_release'], 
-                audi_y.iloc[0]['acc_audi'],
-                f"개봉 {audi_y.iloc[0]['after_release']}일차",
+    # a cumulative audience line graph
+    flag=0
+    if (x >= n_days)&(audi_y <= accm_audi):
+        flag=1
+        cross = cal_dot(n_days, audi_y, df)
+        # n days after release 
+        ax2.text(cross, 
+                audi_y,
+                f"개봉 {n_days}일차",
                 verticalalignment = 'bottom',
-                fontdict={'size':13})
-        # 예상 관객수 scatter
-        ax2.scatter(audi_y.iloc[0]['after_release'], 
-                audi_y.iloc[0]['acc_audi'], 
-                marker='*',
-                c='yellow',
-                linewidth=5, 
-                edgecolors='blue',
-                zorder=2)
-        # 가로 실선
-        ax2.axhline(y = audi_x, color='pink', linestyle='--', linewidth=1,zorder=1)
-    # 누적 관객수 라인 차트
+                fontdict={'size':14})
+        # achieving the expected audience
+        ax2.scatter(cross, 
+                    audi_y, 
+                    marker='*',
+                    c='blue',
+                    linewidth=5, 
+                    edgecolors='blue',
+                    zorder=2)
+        # a expected audience
+        horizontal =ax2.axhline(y = audi_y, color='pink', linestyle='--', linewidth=2, label='예상관객수',zorder=1)
+    # a culmuative audience
     lineplot = ax2.plot(df.after_release, df.acc_audi, color='#FF4B4B', linewidth=3,
-             label='누적 관객수',zorder=0)
-    
-    # 서로 다른 축의 범례를 한번에 표시하기
-    plots = [barplot]+lineplot
-    labels = [l.get_label() for l in plots]
-    plt.legend(plots, labels, loc=0)
+                        label='누적 관객수',zorder=0)
 
-    # 숫자마다 ,
+
+    
+    # display legend
+    if flag == 0:
+        plots = [barplot]+lineplot
+    else:
+        plots = [barplot]+lineplot+[horizontal]
+    labels = [l.get_label() for l in plots]
+    plt.legend(plots, labels, loc='lower right')
+
+    # comma
     current_values = plt.gca().get_yticks()
     plt.gca().set_yticklabels(['{:.0f}'.format(x) for x in current_values])
 
-
-    # x축
+    # set x-ticks
     week = df.shape[0]//7
     week_l1 = [0,1,3]
     week_l2 = ['개\n봉','1\n일\n차','3\n일\n차']
@@ -241,32 +266,40 @@ def Audience(code, screening):
         week_l1.append(i*7)
         week_l2.append(str(i)+'\n주\n차')
     plt.xticks(week_l1,week_l2)
+
     # y 축에 천 단위로 콤마 표시
     formatter = ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x))
     plt.gca().yaxis.set_major_formatter(formatter)
     st.pyplot(fig)
-    
-    # 누적 관객수(acc_audi)가 예상 관객수(audi_x)보다 높을 때
-    if df.iloc[-1]['acc_audi'] >= audi_x: 
-        num = df.iloc[-1]['acc_audi'] - audi_x
-        delta = f"{format(num, ',')}명"
-    else:
-        delta = ''
 
-    # 정보를 세 구역을 나눠서 보여주기
-    col1, col2, col3= st.columns(3)
+    # delta
+    if x != 0:
+        delta1 = f"{format(df.iloc[-1]['daily_audi'] - df.iloc[-2]['daily_audi'],',')}명 (전일 대비)"
+    else:
+        delta1 = ''
+
+    if df.iloc[-1]['acc_audi'] >= audi_y: 
+        num = df.iloc[-1]['acc_audi'] - audi_y
+        delta3 = f"{format(num, ',')}명"
+    else:
+        delta3 = ''
+
+    # st.metric
+    if audi.shape[0]-1 >= 7:
+        col1, col2, col3= st.columns(3)
+        col2.metric(
+            label='예상 관객수(명)',
+            value=f"{format(audi_y, ',')}"
+        )
+    else:
+        col1, col3 = st.columns(2)
     col1.metric(
-        label='일일 관객수(명)',
-        value=f"{format(df.iloc[-1]['daily_audi'], ',')}",
-        delta = f"{format(df.iloc[-1]['daily_audi'] - df.iloc[-2]['daily_audi'],',')}명 (전일 대비)"
-    )
-    ## 예상 관객수 보다 얼마나 더
-    col2.metric(
-        label='예상 관객수(명)',
-        value=f"{format(audi_x, ',')}"
-    )
+            label='일일 관객수(명)',
+            value=f"{format(df.iloc[-1]['daily_audi'], ',')}",
+            delta = delta1
+        )        
     col3.metric(
-        label=f"개봉 {df.iloc[-1]['after_release']}일차 누적 관객수(명)",
-        value=f"{format(df.iloc[-1]['acc_audi'], ',')}",
-        delta = delta
-    )
+            label=f"개봉 {df.iloc[-1]['after_release']}일차 누적 관객수(명)",
+            value=f"{format(df.iloc[-1]['acc_audi'], ',')}",
+            delta = delta3
+        )

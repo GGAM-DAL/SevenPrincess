@@ -1,21 +1,22 @@
-import plotly.graph_objects as px
 import streamlit as st
 import module.information as info
-import numpy as np
 import module.database as Database
 
-# 완
-
+# globale variable step
 step = 0
-def show_review(code, emotion):
+
+def show_keyword_review(code, emotion, neg_pos):
     df = Database.db('movie_info')
     df = df[df['code']==code]
+
+    # before release
     if df.iloc[0]['screening'] == 0:
-        html="<h1 style='text-align:center;'>Before Release</h1>"
+        html="<h1 style='text-align:center;'>😉 개봉 후 확인해주세요</h1>"
         st.markdown(html, unsafe_allow_html=True)
+
         return
 
-    neg_pos = ['부정','긍정']
+    # show title
     html = f"""
     <style>
         .expander {{
@@ -26,46 +27,41 @@ def show_review(code, emotion):
         }}
         .key {{color: pink;}}
     </style>
-    <div class="expander">{neg_pos[emotion]} <span class="key">Key!</span>word
+    <div class="expander">{neg_pos} <span class="key">Key!</span>word
     </div>"""
+    st.markdown(html, unsafe_allow_html=True)
     
-    
-
+    # show keyword reviews
     keyword_df = Database.db('keyword_review')
     keyword = keyword_df[keyword_df['code'] == code]
-    emot = keyword[keyword['emotion']==emotion].reset_index(drop=True)
 
-    st.markdown(html, unsafe_allow_html=True)
+    # positive / negative reviews dataframe
+    emot = keyword[keyword['emotion']==emotion].reset_index(drop=True)
+    # keywords list
     keyword_l = list(emot.keyword.unique())
+
+    # show keywords & reviews
     for i,k in enumerate(keyword_l):
+        # one keyword
         df = emot[emot['keyword']==k].reset_index(drop=True)
+        # show reviews
         with st.expander(f"Ranking {i+1}! {k}"):
             for key in df['review']:
                 st.write('▶ ', key)
     st.markdown('<br><br>', unsafe_allow_html=True)
-    # key1, key2 = st.columns(2)
-    
-    # # 파이차트
-    # key2.markdown(f'<h5><center>Top 5 {neg_pos[emotion]} 키워드 파이차트</center></h5>',unsafe_allow_html=True)
-    # colors = ['#C6DBDA','#FEE1E8','#FED7C3','#F6EAC2','#ECD5E3']
-    # pie = emot.drop_duplicates(subset='keyword')
-    # fig = px.Figure(data=[px.Pie(labels=pie.keyword,
-    #                              values=np.round(pie.score,2), 
-    #                              hole=.5)])
-    # fig.update_traces(hoverinfo='percent', textinfo='label+value',
-    #                   textfont_size=13, marker=dict(colors=colors))
-    # fig.update_layout(margin=dict(l=20, r=20, t=0, b=0),)
-    # key2.markdown('<p style="color: gray; font-size:5px; text-aligh: left; margin-top: 0px;">연관성, 빈도, 유사도를 바탕을 측정된 점수입니다.</p>', unsafe_allow_html=True)
-    # key2.plotly_chart(fig, use_container_width=True)
-    
 
-    # 워드 클라우드
+def show_wordcloud(code, emotion, neg_pos):
+    df = Database.db('movie_info')
+    df = df[df['code']==code]
+
+    if df.iloc[0]['screening'] == 0:
+        return
+    # show word cloud
     df = Database.db('word_cloud')
     df = df[(df['code']==code)&(df['emotion']==emotion)]
     html = f"""
     <style>
         .wordcloud {{
-        background-color: #FFE4E1;
         text-align:center;
         }}
     </style>
@@ -73,20 +69,28 @@ def show_review(code, emotion):
         <img src="{df.iloc[0]['word_cloud']}" alt="word cloud" style='width: 500px'>
     </div>
     """
-
-    # st.markdown(f'<h5><center>{neg_pos[emotion]} 리뷰 워드 클라우드</center></h5>',unsafe_allow_html=True)
-    info.hovers(f'리뷰 워드 클라우드', neg_pos[emotion])
+    # wordcloud information
+    info.hovers(f'리뷰 워드 클라우드', neg_pos)
     st.markdown(html, unsafe_allow_html=True)
 
-    
+
+# show all reviews
 def review_list(code):
+    # use global variable 'step' - dtype is 'int' 
     global step
 
+    # Make dataframe
     review = Database.db('movie_review')
+    df = review[review['code']==code]
+
     center = st.columns([1,4,1])
     # review = review[review['source']=='blog']
+
+    # Make Radio Button
     select = center[1].radio("",('최신순', '오래된순', '높은 평점순', '낮은 평점순'),
                        horizontal=True)
+    
+
     if select == '최신순':
         col = 'after_release'
         bool = False
@@ -99,27 +103,34 @@ def review_list(code):
     elif select == '낮은 평점순':
         col = 'star'
         bool = True
-    df = review[review['code']==code]
+
+    # dataframe sorting
     df.sort_values(col, ascending=bool, inplace=True)
     df.reset_index(drop=True, inplace=True)
-    # 버튼 기본식이 단순함
-    # 
+
+    # dataframe length
     len = df.shape[0]
+
     if len < 10:
+        # end step value : range( , step_e)
         step_e = len
     else:
         step_e = 10
-    center = st.columns([1,1,1,1,1,1,1])
 
+    # make button
+    center = st.columns([1,1,1,1,1,1,1])
+    # first page
     with center[1]:
         if st.button('<<'):
             step = 0
             step_e = step+10
+    # previous page
     with center[2]:
         if st.button('<'):
             if step != 0:
                 step -= 10
                 step_e = step+10
+    # next page
     with center[4]:
         if st.button('\>'):
             step += 10
@@ -127,14 +138,17 @@ def review_list(code):
                 step = len // 10 * 10
                 step_e = step+len % 10
             step_e = step+10
+    # last page
     with center[5]:
         if st.button('\>>'):
             step = len // 10 * 10
             step_e = step+len % 10
+    # show current page
     with center[3]:
         st.write(step//10 + 1,'페이지 / ', len//10 + 1,'페이지')
 
     
+    # show review
     for i in range(step, step_e):
         html=f"""
 <style>

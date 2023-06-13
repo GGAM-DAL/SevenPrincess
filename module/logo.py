@@ -1,7 +1,4 @@
-import streamlit as st
-
-## 이제 수정할 것 없음 ##
-
+# Disply Site Logo & Home Button
 def title():
     html="""
     <style>
