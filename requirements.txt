@@ -4,5 +4,6 @@ matplotlib
 pandas
 numpy
 plotly
-flask_sqlalchemy
+flask_sqlalchemy==3.0.3
 pymysql
+mysqlclient==2.1.1
