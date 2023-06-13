@@ -1,5 +1,6 @@
 import plotly.graph_objects as px
 import streamlit as st
+import module.information as info
 import numpy as np
 import module.database as Database
 
@@ -42,32 +43,40 @@ def show_review(code, emotion):
             for key in df['review']:
                 st.write('▶ ', key)
     st.markdown('<br><br>', unsafe_allow_html=True)
-    key1, key2 = st.columns(2)
+    # key1, key2 = st.columns(2)
     
-    # 파이차트
-    key2.markdown(f'<h5><center>Top 5 {neg_pos[emotion]} 키워드 파이차트</center></h5>',unsafe_allow_html=True)
-    colors = ['#C6DBDA','#FEE1E8','#FED7C3','#F6EAC2','#ECD5E3']
-    pie = emot.drop_duplicates(subset='keyword')
-    fig = px.Figure(data=[px.Pie(labels=pie.keyword,
-                                 values=np.round(pie.score,2), 
-                                 hole=.5)])
-    fig.update_traces(hoverinfo='percent', textinfo='label+value',
-                      textfont_size=13, marker=dict(colors=colors))
-    fig.update_layout(margin=dict(l=20, r=20, t=0, b=0),)
-    key2.markdown('<p style="color: gray; font-size:5px; text-aligh: left; margin-top: 0px;">연관성, 빈도, 유사도를 바탕을 측정된 점수입니다.</p>', unsafe_allow_html=True)
-    key2.plotly_chart(fig, use_container_width=True)
+    # # 파이차트
+    # key2.markdown(f'<h5><center>Top 5 {neg_pos[emotion]} 키워드 파이차트</center></h5>',unsafe_allow_html=True)
+    # colors = ['#C6DBDA','#FEE1E8','#FED7C3','#F6EAC2','#ECD5E3']
+    # pie = emot.drop_duplicates(subset='keyword')
+    # fig = px.Figure(data=[px.Pie(labels=pie.keyword,
+    #                              values=np.round(pie.score,2), 
+    #                              hole=.5)])
+    # fig.update_traces(hoverinfo='percent', textinfo='label+value',
+    #                   textfont_size=13, marker=dict(colors=colors))
+    # fig.update_layout(margin=dict(l=20, r=20, t=0, b=0),)
+    # key2.markdown('<p style="color: gray; font-size:5px; text-aligh: left; margin-top: 0px;">연관성, 빈도, 유사도를 바탕을 측정된 점수입니다.</p>', unsafe_allow_html=True)
+    # key2.plotly_chart(fig, use_container_width=True)
     
 
     # 워드 클라우드
     df = Database.db('word_cloud')
     df = df[(df['code']==code)&(df['emotion']==emotion)]
     html = f"""
-    <div>
-        <img src="{df.iloc[0]['word_cloud']}" alt="word cloud" style='width: 100%'>
+    <style>
+        .wordcloud {{
+        background-color: #FFE4E1;
+        text-align:center;
+        }}
+    </style>
+    <div class='wordcloud'>
+        <img src="{df.iloc[0]['word_cloud']}" alt="word cloud" style='width: 500px'>
     </div>
     """
-    key1.markdown(f'<h5><center>{neg_pos[emotion]} 리뷰 워드 클라우드</center></h5>',unsafe_allow_html=True)
-    key1.markdown(html, unsafe_allow_html=True)
+
+    # st.markdown(f'<h5><center>{neg_pos[emotion]} 리뷰 워드 클라우드</center></h5>',unsafe_allow_html=True)
+    info.hovers(f'리뷰 워드 클라우드', neg_pos[emotion])
+    st.markdown(html, unsafe_allow_html=True)
 
     
 def review_list(code):

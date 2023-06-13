@@ -54,6 +54,7 @@ def info(df, code):
                 </tr>
             </table>
         </center>
+        <br><br>
     </body>
     """
     st.markdown(html, unsafe_allow_html=True)

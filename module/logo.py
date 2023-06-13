@@ -4,11 +4,16 @@ import streamlit as st
 
 def title():
     html="""
+    <style>
+    a {
+    text-decoration-line: none;
+    }
+    </style>
+    <a href="http://localhost:8501/" target="_self">🏠 Home</a>
     <center>
-        <a href="http://localhost:8501/" target="_self">
-            <img src='https://github.com/GGAM-DAL/SevenPrincess/blob/GGAM-DAL/static/logo.png?raw=true'
-            alt='logo' style='width: 600px; margin-bottom:50px;'>
-        </a>
+        <img src='https://github.com/GGAM-DAL/SevenPrincess/blob/GGAM-DAL/static/logo.png?raw=true'
+        alt='logo' style='width: 600px;'><hr><br>
     </center>
+    
     """
     return html

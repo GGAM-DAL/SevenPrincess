@@ -1,6 +1,4 @@
 import streamlit as st
-import sys
-sys.path.insert(1, "C:/2023_멀티캠퍼스_최종프로젝트/SevenPrincess/venv/Lib/site-packages/streamlit_option_menu")
 from streamlit_option_menu import option_menu
 import module.code_list as Codelist
 import module.Poster as Post

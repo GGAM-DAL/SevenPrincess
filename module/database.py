@@ -1,7 +1,7 @@
 import streamlit as st
 # mysql 연동을 위한 설치 패키지
 # pip install flask_sqlalchemy
-# pip install mysqlclient
+# pip install mysqlclient -> 이거 스트림릿에 설치 에러나서 pymysql 설치함 ;;
 
 def db(table):
     # Initialize connection.

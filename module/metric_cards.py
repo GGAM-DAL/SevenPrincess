@@ -1,6 +1,4 @@
 import streamlit as st
-import numpy as np
-import module.database as Database
 
 def style_metric_cards(background_color: str = "#FFF",
     border_size_px: int = 1,
@@ -34,47 +32,4 @@ def style_metric_cards(background_color: str = "#FFF",
         </style>
         """,
         unsafe_allow_html=True,
-)
-
-def cal_score(code):
-    score_df = Database.db('movie_review')
-    score = score_df[score_df.code == code]
-
-    blog_df = score[score.source == 'blog']
-    daum_df = score[score.source =='daum']
-    lotte_df = score[score.source =='lotte']
-
-    
-    # calculate score
-    blog = blog_df.star.mean()
-    daum = daum_df.star.mean()
-    lotte = lotte_df.star.mean()
-
-    if np.isnan(blog):
-        blog = 0.0
-    if np.isnan(daum):
-        daum = 0.0
-    if np.isnan(lotte):
-        lotte = 0.0
-    avg_score = score.star.mean()
-
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric(
-        label='네이버 블로그 평점',
-        value=f"{blog:.2f}"
-    )    
-    c2.metric(
-        label='다음 영화 평점',
-        value=f"{daum:.2f}"
-    )    
-    c3.metric(
-        label='롯데시네마 평점',
-        value=f"{lotte:.2f}"
-    )    
-    c4.metric(
-        label='평균 평점',
-        value=f"{avg_score:.2f}"
     )
-    style_metric_cards()
-
-    return avg_score
