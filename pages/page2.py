@@ -8,7 +8,6 @@ import module.Review as Review
 import module.Score as Score
 import module.Graph as Graph
 import module.information as info
-import pandas as pd
 
 # setting basic page
 Setpage.Setpage()
@@ -21,14 +20,14 @@ code = Codelist.CodeList(df, 1) # Make Code List
 
 Post.info(df, code[0])  
 
-menu = ['평점','키워드','관객수','리뷰']
-tabs = st.tabs(menu)
+tabs = Setpage.tabs(1)
 
 with tabs[0]:
     # Show Score
     info.star()
     avg_score = Score.cal_score(code[0])
     Graph.Score(code[0], avg_score)
+
 with tabs[1]:
     info.keyword(1)
     emotion = st.radio("",('긍정 키워드', '부정 키워드'),
@@ -42,16 +41,7 @@ with tabs[1]:
 with tabs[2]:
     info.audience(1)
     Graph.Audience(code[0], 1)
+    
 with tabs[3]:
     info.review()
     Review.review_list(code[0])
-
-css = '''
-<style>
-    .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
-    backgroud-color: green;
-    }
-</style>
-'''
-
-st.markdown(css, unsafe_allow_html=True)
