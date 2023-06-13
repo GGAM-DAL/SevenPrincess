@@ -1,8 +1,6 @@
-import streamlit as st
 import module.main_page as Mainpage
 import module.database as Database
 import module.set_page as Setpage
-
 
 # Setting basic page
 Setpage.Setpage()
